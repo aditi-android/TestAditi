@@ -158,7 +158,7 @@
     if(ac==='all'){ allData=[]; filtered=[]; renderTable(); setStatus('कृपया AC चुनें','loading'); return; }
     showSpinner(true); setStatus(`${ac} से डेटा लोड हो रहा है...`,'loading');
 
-    const parts = [`${ac}_part_1.json`,`${ac}_part_2.json`,`${ac}_part_3.json`];
+    const parts = [`${ac}.json`,`${ac}.json`,`${ac}.json`];
     try{
       const arrays = await Promise.all(parts.map(f=>fetch(f).then(r=>r.json())));
       allData=arrays.flat();
