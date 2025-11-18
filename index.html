@@ -177,6 +177,7 @@ const loadFiles = async (prefix) => {
     const arrays = [];
     while (true) {
         const fileName = `${prefix}_part_${i}.json`; // use i
+        console.log('Trying to load:', fileName); // DEBUG
         try {
             const res = await fetch(fileName);
             if (!res.ok) break; // No more files
