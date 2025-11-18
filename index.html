@@ -178,7 +178,7 @@ const loadAC = async ac => {
         const loadFiles = async (prefix) => {
             let i = 1, arrays = [];
             while (true) {
-                const fileName = `${prefix}_${i}.json`;
+               const fileName = `${prefix}_part_${part}.json`; 
                 try {
                     const res = await fetch(fileName);
                     if (!res.ok) break; // No more files
