@@ -1,4 +1,3 @@
-<DOCUMENT filename="index.html">
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -38,15 +37,14 @@
       h2 { font-size: 1.2em; padding: 8px; }
       select, input { font-size: 14px; padding: 8px; }
       .search-grid { grid-template-columns: 1fr; }
-      #results { overflow-x: auto; }  /* Scroll table horizontally on small screens */
-      table { min-width: 800px; }     /* Force table width for scrolling */
+      #results { overflow-x: auto; }
+      table { min-width: 800px; }
       th, td { font-size: 12px; padding: 6px; }
       #resetBtn { font-size: 14px; padding: 6px 12px; }
       #pagination button { font-size: 12px; padding: 4px 8px; }
       footer { font-size: 13px; padding: 8px; }
     }
 
-    /* Impressive table styles */
     table { border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     th { background: linear-gradient(#f2f2f2, #e0e0e0); font-weight: bold; color: #333; position: sticky; top: 0; z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
     tr:hover { background: #e6f7ff; transition: background 0.2s; cursor: pointer; }
@@ -65,10 +63,9 @@
 <label for="acSelect" style="font-weight:bold;">कृपया अपना SIR E-Roll 2002 का विधानसभा क्षेत्र चुनें:</label>
 <select id="acSelect">
   <option value="all">सभी पुराने विधानसभा क्षेत्र</option>
-<option value="142">142 - उदयपुर</option>
-<option value="143">143 - उदयपुर ग्रामीण</option>
-<option value="148">148 - गोगुंदा</option>
-  <!-- Add more ACs as needed -->
+  <option value="142">142 - उदयपुर</option>
+  <option value="143">143 - उदयपुर ग्रामीण</option>
+  <option value="148">148 - गोगुंदा</option>
 </select>
 
 <div class="search-grid">
@@ -88,45 +85,6 @@
 <footer>Developed By : NIC, नोडल अधिकारी (IT Help Desk), जिला निर्वाचन कार्यालय, उदयपुर (राज.)</footer>
 
 <script>
-  // ---------- AC → JSON mapping ----------
-//   const acMap = {
-//   "143": "AC_143_n.json"
-// };
-// ---------- JSON files ----------
-const dataFiles = [
-  "data_part_1.json",
-  "data_part_2.json",
-  "data_part_3.json"
-];
-
-// ---------- Load all JSON files ----------
-const loadAllData = async () => {
-  showSpinner(true);
-  setStatus('सभी डेटा पार्ट्स लोड हो रहा है...', 'loading');
-  try {
-    const promises = dataFiles.map(f => fetch(f).then(r => r.json()));
-    const arrays = await Promise.all(promises);
-    allData = arrays.flat(); // merge all arrays
-    fuse = new Fuse(allData, { keys: HINDI_KEYS, threshold: 0.3 });
-    filtered = allData;
-    currentPage = 1;
-    renderTable();
-    setStatus(`कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
-  } catch (err) {
-    console.error(err);
-    setStatus('डेटा लोड करने में त्रुटि', 'loading');
-  }
-  showSpinner(false);
-};
-
-// ---------- Start ----------
-// loadAll(); // default: load all JSON files
-loadAllData();
-
-
-
-
-
   // ---------- Hindi headers (for display) ----------
   const HINDI_HEADERS = [
     'विधानसभा क्षेत्र की संख्या एवं','भाग संख्या','क्रम संख्या','मकान संख्या',
@@ -135,7 +93,7 @@ loadAllData();
 
   // ---------- Hindi keys (exact match from your JSON) ----------
   const HINDI_KEYS = [
-    '﻿विधानसभा क्षेत्र की संख्या एवं',  // Note the BOM ﻿
+    '﻿विधानसभा क्षेत्र की संख्या एवं',  // Note the BOM ﻿ in your JSON
     'भाग संख्या',
     'क्रम संख्या',
     'मकान संख्या',
@@ -147,15 +105,21 @@ loadAllData();
     'मतदाता पहचान संख्या'
   ];
 
+  // ---------- Data files ----------
+  const dataFiles = [
+    "data_part_1.json",
+    "data_part_2.json",
+    "data_part_3.json"
+  ];
+
   let allData = [], fuse, filtered = [], currentPage = 1;
   const ROWS_PER_PAGE = 20;
   const $ = s => document.querySelector(s);
 
-  // ---------- UI ----------
   const setStatus = (txt, cls) => { $('#status').textContent = txt; $('#status').className = cls; };
   const showSpinner = b => $('#spinner').style.display = b ? 'block' : 'none';
 
-  // ---------- Render table (pagination) ----------
+  // ---------- Render table ----------
   const renderTable = () => {
     const container = $('#results');
     container.innerHTML = `<table><thead><tr>${HINDI_HEADERS.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody></tbody></table>`;
@@ -182,7 +146,6 @@ loadAllData();
       tbody.appendChild(tr);
     });
 
-    // --- SHOW MATCH COUNT ---
     const totalMatches = filtered.length;
     const startRec = start + 1;
     const endRec = Math.min(end, totalMatches);
@@ -222,14 +185,12 @@ loadAllData();
         return;
       }
 
-      // Filter manually – each field must match its own column
       filtered = allData.filter(row => {
         const acMatch   = !q.ac   || String(row[HINDI_KEYS[0]]).includes(q.ac);
         const partMatch = !q.part || String(row[HINDI_KEYS[1]]).includes(q.part);
         const nameMatch = !q.name || String(row[HINDI_KEYS[4]]).includes(q.name);
         const relMatch  = !q.rel  || String(row[HINDI_KEYS[6]]).includes(q.rel);
         const epicMatch = !q.epic || String(row[HINDI_KEYS[9]]).includes(q.epic);
-
         return acMatch && partMatch && nameMatch && relMatch && epicMatch;
       });
 
@@ -247,12 +208,7 @@ loadAllData();
       rel:  $('#relativeInput').value.trim(),
       epic: $('#epicInput').value.trim()
     };
-
-    // Remove old highlights
     document.querySelectorAll('td').forEach(td => td.classList.remove('highlight'));
-
-    // Column indexes (1‑based) matching HINDI_KEYS order:
-    // 1: विधानसभा क्षेत्र, 2: भाग संख्या, 5: मतदाता का नाम, 7: संबंधी का नाम, 10: EPIC
     if (q.ac)   document.querySelectorAll('td:nth-child(1)').forEach(td => td.textContent.includes(q.ac) && td.classList.add('highlight'));
     if (q.part) document.querySelectorAll('td:nth-child(2)').forEach(td => td.textContent.includes(q.part) && td.classList.add('highlight'));
     if (q.name) document.querySelectorAll('td:nth-child(5)').forEach(td => td.textContent.includes(q.name) && td.classList.add('highlight'));
@@ -260,40 +216,33 @@ loadAllData();
     if (q.epic) document.querySelectorAll('td:nth-child(10)').forEach(td => td.textContent.includes(q.epic) && td.classList.add('highlight'));
   };
 
-  // ---------- Load data ----------
-  const loadAC = async ac => {
+  // ---------- Load all JSON files ----------
+  const loadAllData = async () => {
     showSpinner(true);
-    setStatus(`${ac} से डेटा लोड हो रहा है...`, 'loading');
-    const resp = await fetch(acMap[ac]);
-    const json = await resp.json();
-    allData = json;
-    fuse = new Fuse(json, {keys: HINDI_KEYS, threshold: 0.3});
-    filtered = json;
-    currentPage = 1;
-    renderTable();
-    setStatus(`कुल ${json.length} रिकॉर्ड लोड हुए`, 'loaded');
-    showSpinner(false);
-  };
-
-  const loadAll = async () => {
-    showSpinner(true);
-    setStatus('सभी क्षेत्रों से डेटा लोड हो रहा है...', 'loading');
-    const promises = Object.values(acMap).map(p => fetch(p).then(r=>r.json()));
-    const arrays = await Promise.all(promises);
-    allData = arrays.flat();
-    fuse = new Fuse(allData, {keys: HINDI_KEYS, threshold: 0.3});
-    filtered = allData;
-    currentPage = 1;
-    renderTable();
-    setStatus(`कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
+    setStatus('सभी डेटा पार्ट्स लोड हो रहा है...', 'loading');
+    try {
+      const promises = dataFiles.map(f => fetch(f).then(r => r.json()));
+      const arrays = await Promise.all(promises);
+      allData = arrays.flat();
+      fuse = new Fuse(allData, { keys: HINDI_KEYS, threshold: 0.3 });
+      filtered = allData;
+      currentPage = 1;
+      renderTable();
+      setStatus(`कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
+    } catch (err) {
+      console.error(err);
+      setStatus('डेटा लोड करने में त्रुटि', 'loading');
+    }
     showSpinner(false);
   };
 
   // ---------- Events ----------
   $('#acSelect').onchange = () => {
-    const v = $('#acSelect').value;
-    if (v === 'all') loadAll();
-    else loadAC(v);
+    const ac = $('#acSelect').value;
+    if (ac === 'all') filtered = allData;
+    else filtered = allData.filter(row => String(row[HINDI_KEYS[0]]).includes(ac));
+    currentPage = 1;
+    renderTable();
   };
 
   $('#acInput').oninput = $('#partInput').oninput =
@@ -303,17 +252,13 @@ loadAllData();
   $('#resetBtn').onclick = () => {
     $('#acSelect').value = 'all';
     ['acInput','partInput','nameInput','relativeInput','epicInput'].forEach(id=>$(`#${id}`).value='');
-    loadAll();
+    filtered = allData;
+    currentPage = 1;
+    renderTable();
   };
 
   // ---------- Start ----------
-  // loadAll();   // default = all ACs
-  loadAC('143');   // default = AC 143 - Loads the AC_143_n.json file
+  loadAllData();
 </script>
 </body>
 </html>
-
-</DOCUMENT>
-
-
-
