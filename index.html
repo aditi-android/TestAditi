@@ -174,31 +174,31 @@ const highlight = ()=>{
 // ---------- Load AC ----------
 const loadAC = async ac => {
   showSpinner(true);
-  if(ac==='all'){
-    try {
+  try {
+    if(ac==='all'){
       const files = ['142.json','143.json','144.json'];
-      const arrays = await Promise.all(files.map(f=>fetch(f).then(r=>r.json())));
+      const arrays = [];
+      for(const f of files){
+        const res = await fetch(f);
+        if(!res.ok) continue;
+        const text = await res.text();
+        if(!text.trim()) continue; // skip empty files
+        arrays.push(JSON.parse(text.replace(/^\uFEFF/,'')));
+      }
       allData = arrays.flat();
       filtered = allData;
-      currentPage = 1;
+      currentPage=1;
       renderTable();
       setStatus(`सभी AC: कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
-    } catch(err){
-      console.error(err);
-      setStatus('डेटा लोड करने में त्रुटि', 'loading');
-      allData=[]; filtered=[];
-      renderTable();
+      showSpinner(false);
+      return;
     }
-    showSpinner(false);
-    return;
-  }
 
-  try {
     const res = await fetch(`${ac}.json`);
     if(!res.ok) throw new Error(`File not found: ${ac}.json`);
     const text = await res.text();
-    const jsonText = text.replace(/^\uFEFF/,''); // Remove BOM if any
-    allData = JSON.parse(jsonText);
+    if(!text.trim()) throw new Error('Empty JSON file');
+    allData = JSON.parse(text.replace(/^\uFEFF/,''));
     filtered = allData;
     currentPage=1;
     renderTable();
@@ -210,6 +210,7 @@ const loadAC = async ac => {
   }
   showSpinner(false);
 };
+
 
 
 // ---------- Events ----------
