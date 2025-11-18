@@ -31,7 +31,6 @@
     #pagination button{padding:6px 12px;margin:0 5px;font-size:14px}
     footer{text-align:center;padding:12px;margin-top:20px;font-size:15px;font-weight:bold;color:#003366;border-top:1px solid #ccc;background:#f1f1f1}
 
-    /* --- MOBILE RESPONSIVE + IMPRESSIVE TABLE --- */
     @media (max-width: 768px) {
       body { padding: 10px; }
       h2 { font-size: 1.2em; padding: 8px; }
@@ -63,9 +62,6 @@
 <label for="acSelect" style="font-weight:bold;">कृपया अपना SIR E-Roll 2002 का विधानसभा क्षेत्र चुनें:</label>
 <select id="acSelect">
   <option value="all">सभी पुराने विधानसभा क्षेत्र</option>
-  <option value="142">142 - उदयपुर</option>
-  <option value="143">143 - उदयपुर ग्रामीण</option>
-  <option value="148">148 - गोगुंदा</option>
 </select>
 
 <div class="search-grid">
@@ -85,15 +81,13 @@
 <footer>Developed By : NIC, नोडल अधिकारी (IT Help Desk), जिला निर्वाचन कार्यालय, उदयपुर (राज.)</footer>
 
 <script>
-  // ---------- Hindi headers (for display) ----------
   const HINDI_HEADERS = [
     'विधानसभा क्षेत्र की संख्या एवं','भाग संख्या','क्रम संख्या','मकान संख्या',
     'मतदाता का नाम','संबन्ध','संबंधी का नाम','लिंग','आयु','मतदाता पहचान संख्या'
   ];
 
-  // ---------- Hindi keys (exact match from your JSON) ----------
   const HINDI_KEYS = [
-    '﻿विधानसभा क्षेत्र की संख्या एवं',  // Note the BOM ﻿ in your JSON
+    '﻿विधानसभा क्षेत्र की संख्या एवं',  // Note the BOM
     'भाग संख्या',
     'क्रम संख्या',
     'मकान संख्या',
@@ -105,13 +99,7 @@
     'मतदाता पहचान संख्या'
   ];
 
-  // ---------- Data files ----------
-  const dataFiles = [
-    "data_part_1.json",
-    "data_part_2.json",
-    "data_part_3.json"
-  ];
-
+  const dataFiles = ["data_part_1.json","data_part_2.json","data_part_3.json"];
   let allData = [], fuse, filtered = [], currentPage = 1;
   const ROWS_PER_PAGE = 20;
   const $ = s => document.querySelector(s);
@@ -119,12 +107,11 @@
   const setStatus = (txt, cls) => { $('#status').textContent = txt; $('#status').className = cls; };
   const showSpinner = b => $('#spinner').style.display = b ? 'block' : 'none';
 
-  // ---------- Render table ----------
+  // ---------- Render Table ----------
   const renderTable = () => {
     const container = $('#results');
     container.innerHTML = `<table><thead><tr>${HINDI_HEADERS.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody></tbody></table>`;
     const tbody = container.querySelector('tbody');
-
     const start = (currentPage - 1) * ROWS_PER_PAGE;
     const end = start + ROWS_PER_PAGE;
     const pageData = filtered.slice(start, end);
@@ -158,22 +145,19 @@
   const renderPagination = () => {
     const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
     if (totalPages <= 1) { $('#pagination').innerHTML = ''; return; }
-
     const prev = `<button ${currentPage===1?'disabled':''} onclick="currentPage--;renderTable()">पिछला</button>`;
     const next = `<button ${currentPage===totalPages?'disabled':''} onclick="currentPage++;renderTable()">अगला</button>`;
     $('#pagination').innerHTML = `${prev} <span>पेज ${currentPage} / ${totalPages}</span> ${next}`;
   };
 
-  // ---------- Search ----------
-  let to;
   const search = () => {
-    clearTimeout(to);
-    to = setTimeout(() => {
+    clearTimeout(window.to);
+    window.to = setTimeout(() => {
       const q = {
-        ac:   $('#acInput').value.trim(),
+        ac: $('#acInput').value.trim(),
         part: $('#partInput').value.trim(),
         name: $('#nameInput').value.trim(),
-        rel:  $('#relativeInput').value.trim(),
+        rel: $('#relativeInput').value.trim(),
         epic: $('#epicInput').value.trim()
       };
 
@@ -186,10 +170,10 @@
       }
 
       filtered = allData.filter(row => {
-        const acMatch   = !q.ac   || String(row[HINDI_KEYS[0]]).includes(q.ac);
+        const acMatch = !q.ac || String(row[HINDI_KEYS[0]]).includes(q.ac);
         const partMatch = !q.part || String(row[HINDI_KEYS[1]]).includes(q.part);
         const nameMatch = !q.name || String(row[HINDI_KEYS[4]]).includes(q.name);
-        const relMatch  = !q.rel  || String(row[HINDI_KEYS[6]]).includes(q.rel);
+        const relMatch = !q.rel || String(row[HINDI_KEYS[6]]).includes(q.rel);
         const epicMatch = !q.epic || String(row[HINDI_KEYS[9]]).includes(q.epic);
         return acMatch && partMatch && nameMatch && relMatch && epicMatch;
       });
@@ -199,13 +183,12 @@
     }, 200);
   };
 
-  // ---------- Highlight ----------
   const highlight = () => {
     const q = {
-      ac:   $('#acInput').value.trim(),
+      ac: $('#acInput').value.trim(),
       part: $('#partInput').value.trim(),
       name: $('#nameInput').value.trim(),
-      rel:  $('#relativeInput').value.trim(),
+      rel: $('#relativeInput').value.trim(),
       epic: $('#epicInput').value.trim()
     };
     document.querySelectorAll('td').forEach(td => td.classList.remove('highlight'));
@@ -216,7 +199,15 @@
     if (q.epic) document.querySelectorAll('td:nth-child(10)').forEach(td => td.textContent.includes(q.epic) && td.classList.add('highlight'));
   };
 
-  // ---------- Load all JSON files ----------
+  const populateACDropdown = () => {
+    const acSet = new Set(allData.map(row => row[HINDI_KEYS[0]]));
+    const acSelect = $('#acSelect');
+    acSelect.innerHTML = '<option value="all">सभी पुराने विधानसभा क्षेत्र</option>';
+    [...acSet].sort().forEach(ac => {
+      acSelect.innerHTML += `<option value="${ac}">${ac}</option>`;
+    });
+  };
+
   const loadAllData = async () => {
     showSpinner(true);
     setStatus('सभी डेटा पार्ट्स लोड हो रहा है...', 'loading');
@@ -228,6 +219,7 @@
       filtered = allData;
       currentPage = 1;
       renderTable();
+      populateACDropdown();
       setStatus(`कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
     } catch (err) {
       console.error(err);
@@ -239,15 +231,20 @@
   // ---------- Events ----------
   $('#acSelect').onchange = () => {
     const ac = $('#acSelect').value;
-    if (ac === 'all') filtered = allData;
-    else filtered = allData.filter(row => String(row[HINDI_KEYS[0]]).includes(ac));
+    if (ac === 'all') {
+      filtered = allData;
+      $('#acInput').value = '';
+    } else {
+      filtered = allData.filter(row => String(row[HINDI_KEYS[0]]).includes(ac));
+      $('#acInput').value = ac;
+    }
     currentPage = 1;
     renderTable();
   };
 
-  $('#acInput').oninput = $('#partInput').oninput =
-  $('#nameInput').oninput = $('#relativeInput').oninput =
-  $('#epicInput').oninput = search;
+  ['acInput','partInput','nameInput','relativeInput','epicInput'].forEach(id=>{
+    $(`#${id}`).oninput = search;
+  });
 
   $('#resetBtn').onclick = () => {
     $('#acSelect').value = 'all';
