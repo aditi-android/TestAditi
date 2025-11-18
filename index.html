@@ -173,42 +173,57 @@ const highlight = ()=>{
 
 // ---------- Load AC ----------
 const loadAC = async ac => {
-  showSpinner(true);
-  try {
-    if(ac==='all'){
-      const files = ['142.json','143.json','144.json'];
-      const arrays = [];
-      for(const f of files){
-        const res = await fetch(f);
-        if(!res.ok) continue;
-        const text = await res.text();
-        if(!text.trim()) continue; // skip empty files
-        arrays.push(JSON.parse(text.replace(/^\uFEFF/,'')));
-      }
-      allData = arrays.flat();
-      filtered = allData;
-      currentPage=1;
-      renderTable();
-      setStatus(`सभी AC: कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
-      showSpinner(false);
-      return;
-    }
+    showSpinner(true);
+    try {
+        const loadFiles = async (prefix) => {
+            let i = 1, arrays = [];
+            while (true) {
+                const fileName = `${prefix}_${i}.json`;
+                try {
+                    const res = await fetch(fileName);
+                    if (!res.ok) break; // No more files
+                    const text = await res.text();
+                    if (!text.trim()) break; // Empty file
+                    arrays.push(JSON.parse(text.replace(/^\uFEFF/, '')));
+                    i++;
+                } catch {
+                    break;
+                }
+            }
+            return arrays.flat();
+        };
 
-    const res = await fetch(`${ac}.json`);
-    if(!res.ok) throw new Error(`File not found: ${ac}.json`);
-    const text = await res.text();
-    if(!text.trim()) throw new Error('Empty JSON file');
-    allData = JSON.parse(text.replace(/^\uFEFF/,''));
-    filtered = allData;
-    currentPage=1;
-    renderTable();
-    setStatus(`AC ${ac}: कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
-  } catch(err){
-    console.error(err);
-    setStatus(`डेटा लोड करने में त्रुटि: ${err.message}`,'loading');
-    allData=[]; filtered=[]; renderTable();
-  }
-  showSpinner(false);
+        if (ac === 'all') {
+            const allACs = ['142','143','144'];
+            let allArrays = [];
+            for (const acNum of allACs) {
+                const data = await loadFiles(acNum);
+                allArrays.push(data);
+            }
+            allData = allArrays.flat();
+            filtered = allData;
+            currentPage = 1;
+            renderTable();
+            setStatus(`सभी AC: कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
+            showSpinner(false);
+            return;
+        }
+
+        // Load specific AC files like 142_1.json, 142_2.json...
+        allData = await loadFiles(ac);
+        filtered = allData;
+        currentPage = 1;
+        renderTable();
+        setStatus(`AC ${ac}: कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
+
+    } catch (err) {
+        console.error(err);
+        setStatus(`डेटा लोड करने में त्रुटि: ${err.message}`, 'loading');
+        allData = [];
+        filtered = [];
+        renderTable();
+    }
+    showSpinner(false);
 };
 
 
