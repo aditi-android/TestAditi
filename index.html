@@ -92,9 +92,37 @@
 //   const acMap = {
 //   "143": "AC_143_n.json"
 // };
-const acMap = {
-  "143": "https://cdn.jsdelivr.net/gh/aditi-android/Test@main/AC_143_n.json"
+// ---------- JSON files ----------
+const dataFiles = [
+  "data_part_1.json",
+  "data_part_2.json",
+  "data_part_3.json"
+];
+
+// ---------- Load all JSON files ----------
+const loadAllData = async () => {
+  showSpinner(true);
+  setStatus('सभी डेटा पार्ट्स लोड हो रहा है...', 'loading');
+  try {
+    const promises = dataFiles.map(f => fetch(f).then(r => r.json()));
+    const arrays = await Promise.all(promises);
+    allData = arrays.flat(); // merge all arrays
+    fuse = new Fuse(allData, { keys: HINDI_KEYS, threshold: 0.3 });
+    filtered = allData;
+    currentPage = 1;
+    renderTable();
+    setStatus(`कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
+  } catch (err) {
+    console.error(err);
+    setStatus('डेटा लोड करने में त्रुटि', 'loading');
+  }
+  showSpinner(false);
 };
+
+// ---------- Start ----------
+// loadAll(); // default: load all JSON files
+loadAllData();
+
 
 
 
