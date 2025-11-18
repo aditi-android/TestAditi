@@ -194,7 +194,7 @@ const loadAC = async ac => {
         };
 
         if (ac === 'all') {
-            const allACs = ['142','143','144'];
+            const allACs = ['142_part1','142_part_2,'143_part_1','143_part_2','143_part_3'];
             let allArrays = [];
             for (const acNum of allACs) {
                 const data = await loadFiles(acNum);
