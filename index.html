@@ -91,7 +91,7 @@
   ];
 
   const HINDI_KEYS = [
-    '﻿विधानसभा क्षेत्र की संख्या एवं',  // Note the BOM
+    '﻿विधानसभा क्षेत्र की संख्या एवं',
     'भाग संख्या',
     'क्रम संख्या',
     'मकान संख्या',
@@ -103,15 +103,13 @@
     'मतदाता पहचान संख्या'
   ];
 
-  const dataFiles = ["143_part_1.json","143_part_2.json","143_part_3.json"];
-  let allData = [], fuse, filtered = [], currentPage = 1;
-  const ROWS_PER_PAGE = 20;
   const $ = s => document.querySelector(s);
+  let allData = [], filtered = [], currentPage = 1;
+  const ROWS_PER_PAGE = 20;
 
   const setStatus = (txt, cls) => { $('#status').textContent = txt; $('#status').className = cls; };
   const showSpinner = b => $('#spinner').style.display = b ? 'block' : 'none';
 
-  // ---------- Render Table ----------
   const renderTable = () => {
     const container = $('#results');
     container.innerHTML = `<table><thead><tr>${HINDI_HEADERS.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody></tbody></table>`;
@@ -155,36 +153,32 @@
   };
 
   const search = () => {
-    clearTimeout(window.to);
-    window.to = setTimeout(() => {
-      const q = {
-        ac: $('#acInput').value.trim(),
-        part: $('#partInput').value.trim(),
-        name: $('#nameInput').value.trim(),
-        rel: $('#relativeInput').value.trim(),
-        epic: $('#epicInput').value.trim()
-      };
+    const q = {
+      ac: $('#acInput').value.trim(),
+      part: $('#partInput').value.trim(),
+      name: $('#nameInput').value.trim(),
+      rel: $('#relativeInput').value.trim(),
+      epic: $('#epicInput').value.trim()
+    };
 
-      if (!q.ac && !q.part && !q.name && !q.rel && !q.epic) {
-        filtered = allData;
-        currentPage = 1;
-        $('#matchCount').textContent = `कुल ${allData.length} रिकॉर्ड लोड हुए`;
-        renderTable();
-        return;
-      }
-
-      filtered = allData.filter(row => {
-        const acMatch = !q.ac || String(row[HINDI_KEYS[0]]).includes(q.ac);
-        const partMatch = !q.part || String(row[HINDI_KEYS[1]]).includes(q.part);
-        const nameMatch = !q.name || String(row[HINDI_KEYS[4]]).includes(q.name);
-        const relMatch = !q.rel || String(row[HINDI_KEYS[6]]).includes(q.rel);
-        const epicMatch = !q.epic || String(row[HINDI_KEYS[9]]).includes(q.epic);
-        return acMatch && partMatch && nameMatch && relMatch && epicMatch;
-      });
-
+    if (!q.ac && !q.part && !q.name && !q.rel && !q.epic) {
+      filtered = allData;
       currentPage = 1;
       renderTable();
-    }, 200);
+      return;
+    }
+
+    filtered = allData.filter(row => {
+      const acMatch = !q.ac || String(row[HINDI_KEYS[0]]).includes(q.ac);
+      const partMatch = !q.part || String(row[HINDI_KEYS[1]]).includes(q.part);
+      const nameMatch = !q.name || String(row[HINDI_KEYS[4]]).includes(q.name);
+      const relMatch = !q.rel || String(row[HINDI_KEYS[6]]).includes(q.rel);
+      const epicMatch = !q.epic || String(row[HINDI_KEYS[9]]).includes(q.epic);
+      return acMatch && partMatch && nameMatch && relMatch && epicMatch;
+    });
+
+    currentPage = 1;
+    renderTable();
   };
 
   const highlight = () => {
@@ -203,28 +197,28 @@
     if (q.epic) document.querySelectorAll('td:nth-child(10)').forEach(td => td.textContent.includes(q.epic) && td.classList.add('highlight'));
   };
 
-  const populateACDropdown = () => {
-    const acSet = new Set(allData.map(row => row[HINDI_KEYS[0]]));
-    const acSelect = $('#acSelect');
-    acSelect.innerHTML = '<option value="all">सभी पुराने विधानसभा क्षेत्र</option>';
-    [...acSet].sort().forEach(ac => {
-      acSelect.innerHTML += `<option value="${ac}">${ac}</option>`;
-    });
-  };
+  // ---------- Load files dynamically based on AC ----------
+  const loadDataForAC = async (ac) => {
+    if (ac === 'all') {
+      allData = [];
+      $('#results').innerHTML = '';
+      $('#matchCount').textContent = '';
+      setStatus('कृपया AC चुनें', 'loading');
+      return;
+    }
 
-  const loadAllData = async () => {
     showSpinner(true);
-    setStatus('सभी डेटा पार्ट्स लोड हो रहा है...', 'loading');
+    setStatus(`AC ${ac} के लिए डेटा लोड हो रहा है...`, 'loading');
+
     try {
-      const promises = dataFiles.map(f => fetch(f).then(r => r.json()));
+      const files = [`${ac}_part_1.json`, `${ac}_part_2.json`, `${ac}_part_3.json`];
+      const promises = files.map(f => fetch(f).then(r => r.json()));
       const arrays = await Promise.all(promises);
       allData = arrays.flat();
-      fuse = new Fuse(allData, { keys: HINDI_KEYS, threshold: 0.3 });
       filtered = allData;
       currentPage = 1;
       renderTable();
-      populateACDropdown();
-      setStatus(`कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
+      setStatus(`AC ${ac}: कुल ${allData.length} रिकॉर्ड लोड हुए`, 'loaded');
     } catch (err) {
       console.error(err);
       setStatus('डेटा लोड करने में त्रुटि', 'loading');
@@ -232,34 +226,29 @@
     showSpinner(false);
   };
 
-  // ---------- Events ----------
+  // ---------- Event Listeners ----------
   $('#acSelect').onchange = () => {
     const ac = $('#acSelect').value;
-    if (ac === 'all') {
-      filtered = allData;
-      $('#acInput').value = '';
-    } else {
-      filtered = allData.filter(row => String(row[HINDI_KEYS[0]]).includes(ac));
-      $('#acInput').value = ac;
-    }
-    currentPage = 1;
-    renderTable();
+    $('#acInput').value = ac === 'all' ? '' : ac;
+    loadDataForAC(ac);
   };
 
-  ['acInput','partInput','nameInput','relativeInput','epicInput'].forEach(id=>{
+  ['acInput','partInput','nameInput','relativeInput','epicInput'].forEach(id => {
     $(`#${id}`).oninput = search;
   });
 
   $('#resetBtn').onclick = () => {
     $('#acSelect').value = 'all';
     ['acInput','partInput','nameInput','relativeInput','epicInput'].forEach(id=>$(`#${id}`).value='');
-    filtered = allData;
+    allData = [];
+    filtered = [];
     currentPage = 1;
-    renderTable();
+    $('#results').innerHTML = '';
+    $('#matchCount').textContent = '';
+    setStatus('कृपया AC चुनें', 'loading');
   };
 
-  // ---------- Start ----------
-  loadAllData();
+  setStatus('कृपया AC चुनें', 'loading');
 </script>
 </body>
 </html>
