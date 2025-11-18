@@ -154,19 +154,37 @@
   };
 
   // ---------- Load AC data ----------
-  const loadAC = async ac=>{
-    if(ac==='all'){ allData=[]; filtered=[]; renderTable(); setStatus('कृपया AC चुनें','loading'); return; }
-    showSpinner(true); setStatus(`${ac} से डेटा लोड हो रहा है...`,'loading');
+  const loadAC = async (ac) => {
+  if(ac === 'all') { 
+    allData = []; 
+    filtered = []; 
+    renderTable(); 
+    setStatus('कृपया AC चुनें','loading'); 
+    return; 
+  }
 
-    const parts = [`${ac}.json`,`${ac}.json`,`${ac}.json`];
-    try{
-      const arrays = await Promise.all(parts.map(f=>fetch(f).then(r=>r.json())));
-      allData=arrays.flat();
-      filtered=allData; currentPage=1;
-      renderTable(); setStatus(`AC ${ac}: कुल ${allData.length} रिकॉर्ड लोड हुए`,'loaded');
-    } catch(err){ console.error(err); setStatus('डेटा लोड करने में त्रुटि','loading'); }
-    showSpinner(false);
-  };
+  showSpinner(true); 
+  setStatus(`${ac} से डेटा लोड हो रहा है...`,'loading');
+
+  const url = `${ac}.json`;  // directly fetch the file for the selected AC
+  try {
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`File not found: ${url}`);
+    allData = await res.json();
+    filtered = allData; 
+    currentPage = 1;
+    renderTable();
+    setStatus(`AC ${ac}: कुल ${allData.length} रिकॉर्ड लोड हुए`,'loaded');
+  } catch(err){
+    console.error(err);
+    setStatus(`डेटा लोड करने में त्रुटि: ${err.message}`, 'loading');
+    allData = [];
+    filtered = [];
+    renderTable();
+  }
+
+  showSpinner(false);
+};
 
   // ---------- Events ----------
   $('#acSelect').onchange = ()=>{
