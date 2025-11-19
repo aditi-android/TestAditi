@@ -7,43 +7,201 @@
   <script src="https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.js"></script>
   <style>
     /* --- Styles same as your original code --- */
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:sans-serif;padding:20px;max-width:900px;margin:auto;background:#fff;color:#000}
-    h2{background:#fff;color:#0077cc;padding:12px;border-radius:6px;text-align:center;border:1px solid #ccc}
-    select,input{width:100%;padding:10px;font-size:16px;margin-bottom:10px;border:1px solid #ccc;border-radius:4px}
-    .search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:15px 0}
-    #status{font-size:14px;margin-bottom:10px;font-weight:bold}
-    #status.loading{color:#c00}
-    #status.loaded{color:#060}
-    #spinner{text-align:center;margin:10px 0;display:none}
-    #spinner svg{width:40px;height:40px}
-    #resetBtn{display:block;margin:15px auto;padding:8px 16px;font-size:15px;background:#0077cc;color:#fff;border:none;border-radius:4px;cursor:pointer}
-    #resetBtn:hover{background:#005fa3}
-    #results{border:1px solid #ccc;border-radius:4px;overflow:hidden}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{border:1px solid #ccc;padding:8px;text-align:left}
-    th{background:#f2f2f2}
-    tr:nth-child(even){background:#fafafa}
-    .highlight{background:#fff8c5 !important;font-weight:bold}
-    #pagination{margin-top:10px;text-align:center}
-    #pagination button{padding:6px 12px;margin:0 5px;font-size:14px}
-    footer{text-align:center;padding:12px;margin-top:20px;font-size:15px;font-weight:bold;color:#003366;border-top:1px solid #ccc;background:#f1f1f1}
-    @media (max-width: 768px) {
-      body { padding: 10px; }
-      h2 { font-size: 1.2em; padding: 8px; }
-      select, input { font-size: 14px; padding: 8px; }
-      .search-grid { grid-template-columns: 1fr; }
-      #results { overflow-x: auto; }
-      table { min-width: 800px; }
-      th, td { font-size: 12px; padding: 6px; }
-      #resetBtn { font-size: 14px; padding: 6px 12px; }
-      #pagination button { font-size: 12px; padding: 4px 8px; }
-      footer { font-size: 13px; padding: 8px; }
-    }
-    table { border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    th { background: linear-gradient(#f2f2f2, #e0e0e0); font-weight: bold; color: #333; position: sticky; top: 0; z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    tr:hover { background: #e6f7ff; transition: background 0.2s; cursor: pointer; }
-    td { transition: background 0.2s; }
+   *{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:sans-serif;
+  padding:20px;
+  max-width:900px;
+  margin:auto;
+  background:#fff;
+  color:#000;
+}
+
+h2{
+  background:#fff;
+  color:#0077cc;
+  padding:12px;
+  border-radius:6px;
+  text-align:center;
+  border:1px solid #ccc;
+  font-size:1.6rem;
+}
+
+select,input{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  margin-bottom:10px;
+  border:1px solid #ccc;
+  border-radius:4px;
+}
+
+/* GRID INPUTS */
+.search-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:10px;
+  margin:15px 0;
+}
+
+#status{
+  font-size:14px;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+#status.loading{color:#c00}
+#status.loaded{color:#060}
+
+#spinner{
+  text-align:center;
+  margin:10px 0;
+  display:none
+}
+#spinner svg{
+  width:40px;
+  height:40px
+}
+
+#resetBtn{
+  display:block;
+  margin:15px auto;
+  padding:8px 16px;
+  font-size:15px;
+  background:#0077cc;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  cursor:pointer
+}
+#resetBtn:hover{
+  background:#005fa3
+}
+
+#results{
+  border:1px solid #ccc;
+  border-radius:4px;
+  overflow-x:auto;          /* 🔥 IMPORTANT FOR MOBILE */
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+  min-width:850px;         /* 🔥 prevents ugly shrink on mobile */
+}
+
+th,td{
+  border:1px solid #ccc;
+  padding:8px;
+  text-align:left
+}
+
+th{
+  background:linear-gradient(#f2f2f2,#e0e0e0);
+  font-weight:bold;
+  color:#333;
+  position:sticky;
+  top:0;
+  z-index:1;
+  box-shadow:0 1px 2px rgba(0,0,0,0.1)
+}
+
+tr:nth-child(even){
+  background:#fafafa
+}
+
+tr:hover{
+  background:#e6f7ff;
+  transition:background .2s;
+  cursor:pointer
+}
+
+td{
+  transition:background .2s
+}
+
+.highlight{
+  background:#fff8c5!important;
+  font-weight:bold
+}
+
+#pagination{
+  margin-top:10px;
+  text-align:center
+}
+#pagination button{
+  padding:6px 12px;
+  margin:0 5px;
+  font-size:14px
+}
+
+footer{
+  text-align:center;
+  padding:12px;
+  margin-top:20px;
+  font-size:15px;
+  font-weight:bold;
+  color:#003366;
+  border-top:1px solid #ccc;
+  background:#f1f1f1
+}
+
+/* -------------------- MOBILE RESPONSIVE -------------------- */
+@media (max-width: 768px){
+  
+  body{
+    padding:12px;
+  }
+
+  h2{
+    font-size:1.3rem;
+    padding:10px;
+  }
+  
+  select,input{
+    font-size:14px;
+    padding:8px;
+  }
+  
+  .search-grid{
+    grid-template-columns:1fr;   /* 🔥 stack all boxes nicely */
+  }
+
+  table{
+    font-size:13px;
+    min-width:780px;             /* mobile width compatible */
+  }
+
+  th,td{
+    padding:6px;
+  }
+
+  #resetBtn{
+    font-size:14px;
+    padding:6px 12px;
+  }
+
+  #pagination button{
+    font-size:12px;
+    padding:4px 8px;
+  }
+
+  footer{
+    font-size:13px;
+    padding:8px;
+  }
+}
+
+/* Extra small devices (≤ 480px) */
+@media (max-width: 480px){
+  h2{
+    font-size:1.1rem;
+  }
+  table{
+    min-width:720px;
+  }
+}
   </style>
 </head>
 <body>
